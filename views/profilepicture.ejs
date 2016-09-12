@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>WEbRTC</title>
+<link rel ="stylesheet" type="text/css" href="style.css">
+<!-- <script src = "/socket.io/socket.io.js"></script> -->
+</head>
+<body>	
+    <div id ="cameraSelector">
+			Video: <select id ="camera"></select>
+            Audio: <select id ="mic"></select>
+	</div>
+	<p>
+        <button id="takeProfilePicture" type="button" autofocus="true">Create Profile Pic</button>
+    </p>
+		<video id="videoTag" autoplay></video>
+        <canvas id="profilePicCanvas" style="display: none;"></canvas>
+        <div>
+            <img id="profilePictureOutput" name=profilepic>
+            <a href="#" class="button" id="btn-download" download="myname.png">Download</a>
+        </div>
+    
+<!--    chat message -->
+  
+	<!--	<div>
+				<label> Your Name</label><input id="myName" type="text"/>
+				<label> Message </label> <input id="myMessage" type="text"/>
+				<input id="sendMessage" type="submit"/>
+				<div id="chatArea"> Message Output:<br></div>
+		</div>
+-->
+		<script>
+          
+          var videoArea = document.querySelector("video");
+          var videoSelect = document.querySelector('#camera');
+         
+            //<!-- profile picture start --- !>
+                
+          var profilePicCanvas = document.querySelector("#profilePicCanvas");
+          var profilePictureOutput = document.querySelector("#profilePictureOutput");
+          var takePicButton = document.querySelector("#takeProfilePicture");
+          var videoTag = document.querySelector("#videoTag");
+            
+            var width = 240;
+            var height = 0;
+            var streaming = false;
+            
+            takePicButton.addEventListener('click', function(ev){
+                takeProfilePic();
+                ev.PreventDefault();
+            }, false);
+            
+            //Mozilla WebRTC video streamplay canplay function start
+            
+      videoTag.addEventListener('canplay', function(ev){
+      if (!streaming) {
+        height = videoTag.videoHeight / (videoTag.videoWidth/width);
+      
+        // Firefox currently has a bug where the height can't be read from
+        // the video, so we will make assumptions if this happens.
+      
+        if (isNaN(height)) {
+          height = width / (4/3);
+        }
+      
+        videoTag.setAttribute('width', width);
+        videoTag.setAttribute('height', height);
+        profilePicCanvas.setAttribute('width', width);
+        profilePicCanvas.setAttribute('height', height);
+        streaming = true;
+      }
+    }, false);
+            
+            //Mozilla WebRTC video streamplay canplay function start
+            // profilcpic 
+            
+            function takeProfilePic(){
+                
+                var context = profilePicCanvas.getContext('2d');
+                var button = document.getElementById('btn-download');
+                if(width && height){
+                    profilePicCanvas.width= width;
+                    profilePicCanvas.height= height;
+                 context.drawImage(videoTag, 0, 0, width, height);
+                    
+                var data = profilePicCanvas.toDataURL('image/png');
+                profilePictureOutput.setAttribute('src',data);
+                button.href = data;
+                    
+                }
+            }
+            
+           //<!-- profile picture end  -- !>
+              
+	      /* var myName = document.querySelector("#myName");
+		  var myMessage = document.querySelector("#myMessage");
+		  var sendMessage = document.querySelector("#sendMessage");
+		  var chatArea = document.querySelector("#chatArea");
+		  var ROOM = "chat";
+			
+		 */
+            var videoArea = document.querySelector("video");
+            var videoSelect = document.querySelector('#camera');
+            var audioSelect = document.querySelector('#mic');
+   
+            // to check if browser supports the camera and audio selector
+            if (typeof MediaStreamTrack === 'undefined' || 
+                typeof MediaStreamTrack.getSources ==='undefined')
+                {
+                    document.querySelector("#cameraSelector").style.visibility="hidden";
+                }
+            else
+            {  MediaStreamTrack.getSources(getCameras); }
+            
+            
+            videoSelect.onchange = startStream;
+            audioSelect.onchange = startStream;
+            
+            startStream();
+            
+            function getCameras(sourceInfos) {
+				for (var i = 0; i !== sourceInfos.length; ++i) {
+					var sourceInfo = sourceInfos[i];
+					var option = document.createElement('option');
+					option.value = sourceInfo.id;
+                    if (sourceInfo.kind === 'audio') {
+                option.text = sourceInfo.label || 'microphone ' + (audioSelect.length + 1);
+      audioSelect.appendChild(option);
+					}
+				else if (sourceInfo.kind === 'video') {
+						option.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1);
+						videoSelect.appendChild(option);
+					}
+				}
+			}
+            
+            function startStream(){
+                
+                navigator.getUserMedia = navigator.getUserMedia ||
+			    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+			    var videoSource = videoSelect.value;
+                var audioSource = audioSelect.value;
+			    var constraints = { audio: {
+                                        optional:[{
+                                        sourceId: audioSource
+                                        }]
+                                }, 
+								video:{
+								mandatory: {
+								minWidth: 240,
+								minHeight: 240,
+                                maxWidth: 240,
+                                maxHeight: 240
+								            },
+                                    optional:[{
+                                        sourceId: videoSource
+                                        
+                                    }]
+								        } 
+            			         };
+                navigator.getUserMedia(constraints, onSuccess, onError);
+                
+            }
+			
+			function onSuccess(stream){
+			console.log("Success!  We have a stream");
+			videoArea.src = window.URL.createObjectURL(stream);
+           videoArea.className = "grayscale_filter";
+                videoArea.play();
+			}
+			
+			function onError(error){
+				console.log("Error with getUserMedia: ", error);
+			}
+			
+		</script>
+        
+
+</body>
+</html>
